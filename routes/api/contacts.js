@@ -54,9 +54,10 @@ router.get("/:contactId", async (req, res, next) => {
 router.post("/", addContactValidation, async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
-    const contact = await addContact({ name, email, phone });
+    await addContact({ name, email, phone });
+    const contacts = await getContacts();
     res.status(200);
-    res.json({ message: `Contact ${contact.name} was successfully added` });
+    res.json(contacts);
   } catch (error) {
     res.status(400);
     res.json({ Error: error.message });
@@ -73,9 +74,10 @@ router.delete("/:contactId", async (req, res, next) => {
         message: `There is no contact with id ${req.params.contactId} to delete`,
       });
     }
-    const contact = await removeContact(req.params.contactId);
+    await removeContact(req.params.contactId);
+    const contacts = await getContacts();
     res.status(200);
-    res.json({ message: `Contact ${contact.name} was successfully deleted` });
+    res.json(contacts);
   } catch (error) {
     res.status(404);
     res.json({ Error: error.message });
@@ -94,13 +96,14 @@ router.put("/:contactId", updateContactValidation, async (req, res, next) => {
       });
     }
     const { name, email, phone } = req.body;
-    const contact = await updateContact(req.params.contactId, {
+    await updateContact(req.params.contactId, {
       name,
       email,
       phone,
     });
+    const contacts = await getContacts();
     res.status(200);
-    res.json({ message: `Contact ${contact.name} was successfully changed` });
+    res.json(contacts);
   } catch (error) {
     res.status(400);
     res.json({ Error: error.message });
