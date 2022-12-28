@@ -3,7 +3,15 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  listContacts,
+  addContactValidation,
+} = require("../../utils/validation/validationSchemaAdding");
+
+const {
+  updateContactValidation,
+} = require("../../utils/validation/validationSchemaUndating");
+
+const {
+  getContacts,
   getContactById,
   removeContact,
   addContact,
@@ -11,8 +19,8 @@ const {
 } = require("../../models/contacts");
 
 router.get("/", async (req, res, next) => {
-  const contacts = await listContacts();
   try {
+    const contacts = await getContacts();
     res.status(200);
     res.json(contacts);
   } catch (error) {
@@ -26,15 +34,15 @@ router.get("/", async (req, res, next) => {
 });
 
 router.get("/:contactId", async (req, res, next) => {
-  const contact = await getContactById(req.params.contactId);
-  if (!contact) {
-    res.status(404);
-    res.json({
-      message: `There is no contact with id ${req.params.contactId} in contact-list`,
-    });
-    return;
-  }
   try {
+    const contact = await getContactById(req.params.contactId);
+    if (!contact) {
+      res.status(404);
+      res.json({
+        message: `There is no contact with id ${req.params.contactId} in contact-list`,
+      });
+      return;
+    }
     res.status(200);
     res.json(contact);
   } catch (error) {
@@ -43,9 +51,10 @@ router.get("/:contactId", async (req, res, next) => {
   next();
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", addContactValidation, async (req, res, next) => {
   try {
-    const contact = await addContact(req.body);
+    const { name, email, phone } = req.body;
+    const contact = await addContact({ name, email, phone });
     res.status(200);
     res.json({ message: `Contact ${contact.name} was successfully added` });
   } catch (error) {
@@ -56,14 +65,14 @@ router.post("/", async (req, res, next) => {
 });
 
 router.delete("/:contactId", async (req, res, next) => {
-  const searchContact = await getContactById(req.params.contactId);
-  if (!searchContact) {
-    return res.json({
-      status: "404. Not Found",
-      message: `There is no contact with id ${req.params.contactId} to delete`,
-    });
-  }
   try {
+    const searchContact = await getContactById(req.params.contactId);
+    if (!searchContact) {
+      return res.json({
+        status: "404. Not Found",
+        message: `There is no contact with id ${req.params.contactId} to delete`,
+      });
+    }
     const contact = await removeContact(req.params.contactId);
     res.status(200);
     res.json({ message: `Contact ${contact.name} was successfully deleted` });
@@ -75,16 +84,21 @@ router.delete("/:contactId", async (req, res, next) => {
   next();
 });
 
-router.put("/:contactId", async (req, res, next) => {
-  const searchContact = await getContactById(req.params.contactId);
-  if (!searchContact) {
-    return res.json({
-      status: "404. Not Found",
-      message: `There is no contact with id ${req.params.contactId} to change`,
-    });
-  }
+router.put("/:contactId", updateContactValidation, async (req, res, next) => {
   try {
-    const contact = await updateContact(req.params.contactId, req.body);
+    const searchContact = await getContactById(req.params.contactId);
+    if (!searchContact) {
+      return res.json({
+        status: "404. Not Found",
+        message: `There is no contact with id ${req.params.contactId} to change`,
+      });
+    }
+    const { name, email, phone } = req.body;
+    const contact = await updateContact(req.params.contactId, {
+      name,
+      email,
+      phone,
+    });
     res.status(200);
     res.json({ message: `Contact ${contact.name} was successfully changed` });
   } catch (error) {
