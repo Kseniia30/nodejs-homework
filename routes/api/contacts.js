@@ -109,14 +109,14 @@ router.put("/:contactId", updateContactValidation, async (req, res, next) => {
 });
 
 router.patch(
-  "/:contactId/favorite",
+  "/:contactId",
   changeStatusContactValidation,
   async (req, res, next) => {
     const { favorite } = req.body;
 
     const changedContactStatus = await changeContactStatus(
       req.params.contactId,
-      { favorite }
+      favorite
     );
 
     if (!changedContactStatus) {
