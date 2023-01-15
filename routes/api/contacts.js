@@ -16,11 +16,16 @@ const {
   removeContact,
   addContact,
   updateContact,
+  changeContactStatus,
 } = require("../../models/contacts");
+const {
+  changeStatusContactValidation,
+} = require("../../utils/validation/validationSchemaChanging");
 
 router.get("/", async (req, res, next) => {
   try {
     const contacts = await getContacts();
+    console.log(contacts);
     res.status(200).json(contacts);
   } catch (error) {
     res.status(404).json({
@@ -102,5 +107,24 @@ router.put("/:contactId", updateContactValidation, async (req, res, next) => {
 
   next();
 });
+
+router.patch(
+  "/:contactId/favorite",
+  changeStatusContactValidation,
+  async (req, res, next) => {
+    const { favorite } = req.body;
+
+    const changedContactStatus = await changeContactStatus(
+      req.params.contactId,
+      favorite
+    );
+
+    if (!changedContactStatus) {
+      res.status(404).json({ message: "Not found" });
+    }
+
+    res.status(200).json({ message: "The status was changed" });
+  }
+);
 
 module.exports = router;
