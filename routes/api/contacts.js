@@ -73,10 +73,10 @@ router.delete("/:contactId", async (req, res, next) => {
         message: `There is no contact with id ${req.params.contactId} to delete`,
       });
     }
-    const contact = await removeContact(req.params.contactId);
-    res
-      .status(200)
-      .json({ message: `Contact ${contact.name} was successfully deleted` });
+    await removeContact(req.params.contactId);
+    res.status(200).json({
+      message: `Contact ${req.params.contactId} was successfully deleted`,
+    });
   } catch (error) {
     res.status(404).json({ Error: error.message });
   }
@@ -93,14 +93,14 @@ router.put("/:contactId", updateContactValidation, async (req, res, next) => {
       });
     }
     const { name, email, phone } = req.body;
-    const contact = await updateContact(req.params.contactId, {
+    await updateContact(req.params.contactId, {
       name,
       email,
       phone,
     });
-    res
-      .status(200)
-      .json({ message: `Contact ${contact.name} was successfully changed` });
+    res.status(200).json({
+      message: `Contact ${name} was successfully changed`,
+    });
   } catch (error) {
     res.status(400).json({ Error: error.message });
   }
@@ -116,7 +116,7 @@ router.patch(
 
     const changedContactStatus = await changeContactStatus(
       req.params.contactId,
-      favorite
+      { favorite }
     );
 
     if (!changedContactStatus) {
