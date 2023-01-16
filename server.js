@@ -2,7 +2,7 @@ const app = require("./app");
 require("dotenv").config();
 const { connectMango } = require("./db/connectMango");
 
-const start = async () => {
+(async () => {
   try {
     await connectMango();
   } catch (error) {
@@ -13,6 +13,4 @@ const start = async () => {
   app.listen(3000, () => {
     console.log(`Server running. Use our API on port: 3000`);
   });
-};
-
-start();
+})();

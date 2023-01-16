@@ -17,12 +17,6 @@ const getContactById = async (contactId) => {
 
 const removeContact = async (contactId) => {
   await Contacts.findByIdAndRemove(contactId);
-
-  if (!contactId) {
-    return { message: "Not found" };
-  }
-
-  return { message: `The contact was removed` };
 };
 
 const addContact = async (body) => {
@@ -35,8 +29,6 @@ const addContact = async (body) => {
 const updateContact = async (contactId, body) => {
   const { name, email, phone } = body;
   await Contacts.findByIdAndUpdate(contactId, { $set: { name, email, phone } });
-
-  return { message: "The contact was updated" };
 };
 
 const changeContactStatus = async (contactId, status) => {

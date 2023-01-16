@@ -20,7 +20,7 @@ const {
 } = require("../../models/contacts");
 const {
   changeStatusContactValidation,
-} = require("../../utils/validation/validationSchemaChanging");
+} = require("../../middlewares/validation/changeStatusContactValidation");
 
 router.get("/", async (req, res, next) => {
   try {
@@ -75,7 +75,7 @@ router.delete("/:contactId", async (req, res, next) => {
     }
     await removeContact(req.params.contactId);
     res.status(200).json({
-      message: `Contact ${req.params.contactId} was successfully deleted`,
+      message: `Contact ${searchContact.name} was successfully deleted`,
     });
   } catch (error) {
     res.status(404).json({ Error: error.message });
@@ -100,6 +100,7 @@ router.put("/:contactId", updateContactValidation, async (req, res, next) => {
     });
     res.status(200).json({
       message: `Contact ${name} was successfully changed`,
+      contact: searchContact,
     });
   } catch (error) {
     res.status(400).json({ Error: error.message });
