@@ -53,9 +53,10 @@ router.post("/login", loginValidation, async (req, res, next) => {
 
 router.get("/logout", async (req, res, next) => {
   try {
-    const { _id } = req.user;
+    const token = req.headers.authorization?.split(" ")[1];
+    const currentUser = await User.findOne({ token });
 
-    await logout({ _id });
+    await logout({ _id: currentUser._id });
 
     res.status(204).end();
   } catch (error) {
@@ -66,9 +67,7 @@ router.get("/logout", async (req, res, next) => {
 router.get("/current", async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    console.log(token);
     const currentUser = await getCurrent(token);
-    console.log(currentUser);
 
     res.status(200).json({ currentUser });
   } catch (error) {

@@ -51,7 +51,6 @@ const getCurrent = async (token) => {
   }
 
   const currentUser = { email: user.email, subscription: user.subscription };
-  console.log(currentUser);
   return currentUser;
 };
 

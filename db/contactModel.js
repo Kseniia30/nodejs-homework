@@ -7,7 +7,6 @@ const contactsSchema = mongoose.Schema(
       minLength: 3,
       maxLength: 30,
       required: true,
-      unique: true,
     },
     email: {
       type: String,
@@ -19,7 +18,6 @@ const contactsSchema = mongoose.Schema(
       minLength: 10,
       maxLength: 20,
       required: true,
-      unique: true,
     },
     favorite: {
       type: Boolean,
