@@ -99,13 +99,25 @@ router.put("/:contactId", updateContactValidation, async (req, res, next) => {
   try {
     const { _id: owner } = req.user;
     const { contactId } = req.params;
-    const updatedContact = await updateContact(contactId, req.body, owner);
 
-    if (!updatedContact) {
-      return res.status(404).json({ message: "Not found" });
+    const contactById = await getContactById(contactId, owner);
+    if (!contactById) {
+      return res.status(404).json({
+        message: `There is no contact with id ${req.params.contactId} to change`,
+      });
     }
+    const { name, email, phone } = req.body;
+    const updatedContact = await updateContact(
+      contactId,
+      { name, email, phone },
+      owner
+    );
+    console.log(updatedContact);
 
-    res.status(200).json(updatedContact);
+    res.status(200).json({
+      message: `Contact ${name} was successfully changed`,
+      contact: contactById,
+    });
   } catch (error) {
     res.status(400).json({ Error: error.message });
   }
