@@ -78,10 +78,11 @@ router.delete("/:contactId", async (req, res, next) => {
   try {
     const { _id: owner } = req.user;
     const { contactId } = req.params;
+    const contact = await getContactById(contactId, owner);
 
-    if (!req.params.contactId) {
+    if (!contact) {
       return res.status(404).json({
-        message: "Not found",
+        message: `There is no contact with id ${contactId}`,
       });
     }
 

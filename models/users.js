@@ -15,12 +15,16 @@ const registration = async (name, email, password) => {
     password: await bcrypt.hash(password, 10),
   });
   await user.save();
+  user.password = null;
   return user;
 };
 
 const login = async ({ email, password }) => {
   const candidate = await User.findOne({ email });
-  const isPasswordCorrect = await bcrypt.compare(password, candidate.password);
+  if (!candidate) {
+    throw new Error(404, `There is no user with email ${email}`);
+  }
+  const isPasswordCorrect = await bcrypt.compare(password, candidate?.password);
 
   if (!candidate || !isPasswordCorrect) {
     throw new Error("Wrong email or password");
