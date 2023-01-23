@@ -1,11 +1,7 @@
-const Joi = require("joi");
-
-const schema = Joi.object({
-  favorite: Joi.boolean().required(),
-});
+const { statusSchema } = require("./schemas/statusSchema");
 
 const changeStatusContactValidation = (req, res, next) => {
-  const validationResult = schema.validate(req.body);
+  const validationResult = statusSchema.validate(req.body);
   if (validationResult.error) {
     return res
       .status(400)

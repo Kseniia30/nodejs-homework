@@ -21,12 +21,20 @@ const {
 const {
   changeStatusContactValidation,
 } = require("../../middlewares/validation/changeStatusContactValidation");
+const checkJWT = require("../../middlewares/checkJwt");
+
+router.use(checkJWT);
 
 router.get("/", async (req, res, next) => {
   try {
-    const contacts = await getContacts();
-    console.log(contacts);
-    res.status(200).json(contacts);
+    const { _id: owner } = req.user;
+    let { page = 1, limit = 10 } = req.query;
+    limit = limit > 10 ? 10 : limit;
+    const skip = (page - 1) * limit;
+
+    const contactList = await getContacts(owner, skip, limit);
+
+    res.status(200).json(contactList);
   } catch (error) {
     res.status(404).json({
       message: error.message,
@@ -38,14 +46,12 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:contactId", async (req, res, next) => {
   try {
-    const contact = await getContactById(req.params.contactId);
-    if (!contact) {
-      res.status(404).json({
-        message: `There is no contact with id ${req.params.contactId} in contact-list`,
-      });
-      return;
-    }
-    res.status(200).json(contact);
+    const { _id: owner } = req.user;
+    const { contactId } = req.params;
+
+    const contactById = await getContactById(contactId, owner);
+
+    res.status(200).json(contactById);
   } catch (error) {
     res.json({ Error: error.message });
   }
@@ -55,10 +61,13 @@ router.get("/:contactId", async (req, res, next) => {
 router.post("/", addContactValidation, async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
-    const contact = await addContact({ name, email, phone });
+    const { _id: owner } = req.user;
+
+    const newContact = await addContact({ name, email, phone }, owner);
+
     res
       .status(201)
-      .json({ message: `Contact ${contact.name} was successfully added` });
+      .json({ message: `Contact ${newContact.name} was successfully added` });
   } catch (error) {
     res.status(400).json({ Error: error.message });
   }
@@ -67,16 +76,19 @@ router.post("/", addContactValidation, async (req, res, next) => {
 
 router.delete("/:contactId", async (req, res, next) => {
   try {
-    const searchContact = await getContactById(req.params.contactId);
-    if (!searchContact) {
+    const { _id: owner } = req.user;
+    const { contactId } = req.params;
+    const contact = await getContactById(contactId, owner);
+
+    if (!contact) {
       return res.status(404).json({
-        message: `There is no contact with id ${req.params.contactId} to delete`,
+        message: `There is no contact with id ${contactId}`,
       });
     }
-    await removeContact(req.params.contactId);
-    res.status(200).json({
-      message: `Contact ${searchContact.name} was successfully deleted`,
-    });
+
+    await removeContact(contactId, owner);
+
+    res.status(200).json({ message: "The contact was deleted." });
   } catch (error) {
     res.status(404).json({ Error: error.message });
   }
@@ -86,21 +98,26 @@ router.delete("/:contactId", async (req, res, next) => {
 
 router.put("/:contactId", updateContactValidation, async (req, res, next) => {
   try {
-    const searchContact = await getContactById(req.params.contactId);
-    if (!searchContact) {
+    const { _id: owner } = req.user;
+    const { contactId } = req.params;
+
+    const contactById = await getContactById(contactId, owner);
+    if (!contactById) {
       return res.status(404).json({
         message: `There is no contact with id ${req.params.contactId} to change`,
       });
     }
     const { name, email, phone } = req.body;
-    await updateContact(req.params.contactId, {
-      name,
-      email,
-      phone,
-    });
+    const updatedContact = await updateContact(
+      contactId,
+      { name, email, phone },
+      owner
+    );
+    console.log(updatedContact);
+
     res.status(200).json({
       message: `Contact ${name} was successfully changed`,
-      contact: searchContact,
+      contact: contactById,
     });
   } catch (error) {
     res.status(400).json({ Error: error.message });
@@ -113,18 +130,25 @@ router.patch(
   "/:contactId",
   changeStatusContactValidation,
   async (req, res, next) => {
-    const { favorite } = req.body;
+    try {
+      const { favorite } = req.body;
+      const { contactId } = req.params;
+      const { _id: owner } = req.user;
 
-    const changedContactStatus = await changeContactStatus(
-      req.params.contactId,
-      favorite
-    );
+      const changedContactStatus = await changeContactStatus(
+        contactId,
+        favorite,
+        owner
+      );
 
-    if (!changedContactStatus) {
-      res.status(404).json({ message: "Not found" });
+      if (!changedContactStatus) {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      res.status(200).json({ message: "The status was changed" });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-
-    res.status(200).json({ message: "The status was changed" });
   }
 );
 

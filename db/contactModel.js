@@ -7,15 +7,10 @@ const contactsSchema = mongoose.Schema(
       minLength: 3,
       maxLength: 30,
       required: true,
-      unique: true,
     },
     email: {
       type: String,
       required: true,
-      // match: [
-      //   /^w+([.-]?w+)*@w+([.-]?w+)*(.w{2,3})+$/,
-      //   "Please fill a valid email address",
-      // ],
       unique: true,
     },
     phone: {
@@ -23,11 +18,14 @@ const contactsSchema = mongoose.Schema(
       minLength: 10,
       maxLength: 20,
       required: true,
-      unique: true,
     },
     favorite: {
       type: Boolean,
       default: false,
+    },
+    owner: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "user",
     },
   },
   {
