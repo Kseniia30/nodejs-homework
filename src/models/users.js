@@ -1,6 +1,8 @@
-const { User } = require("../db/userModel");
+const { User } = require("../../db/userModel");
 const bcrypt = require("bcrypt");
+const gravatar = require("gravatar");
 const jwt = require("jsonwebtoken");
+const { replaceAvatar } = require("../helpers/replaceAvatar");
 
 const registration = async (name, email, password) => {
   const candidate = await User.findOne({ email });
@@ -8,11 +10,12 @@ const registration = async (name, email, password) => {
   if (candidate) {
     throw new Error("Email in use");
   }
-
+  const avatarURL = gravatar.url(email);
   const user = new User({
     name,
     email,
     password: await bcrypt.hash(password, 10),
+    avatarURL,
   });
   await user.save();
   user.password = null;
@@ -71,10 +74,29 @@ const changeUserSubscription = async (token, subscription) => {
   return { message: `User subscription type was changed on ${subscription}` };
 };
 
+const changeAvatar = async (token, originalname, tempUpload, avatarURL) => {
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById({ _id: payload._id });
+
+  if (!user || !token) {
+    throw new Error(401, "Unautorized");
+  }
+
+  const newAvatarURL = await replaceAvatar(originalname, tempUpload);
+
+  await User.findOneAndUpdate(
+    { _id: user._id },
+    { $set: { avatarURL: newAvatarURL } }
+  );
+
+  return { message: "User avatar was changed." };
+};
+
 module.exports = {
   registration,
   login,
   logout,
   getCurrent,
   changeUserSubscription,
+  changeAvatar,
 };
