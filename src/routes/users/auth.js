@@ -32,9 +32,9 @@ router.post("/login", loginValidation, asyncWrapper(loginController));
 
 router.get("/logout", asyncWrapper(logoutController));
 
-router.get("/current", asyncWrapper(getCurrentUserController));
+router.get("/current", checkJWT, asyncWrapper(getCurrentUserController));
 
-router.patch("/current", asyncWrapper(changeSubscriptionController));
+router.patch("/current", checkJWT, asyncWrapper(changeSubscriptionController));
 
 router.patch(
   "/avatars",
