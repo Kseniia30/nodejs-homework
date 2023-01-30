@@ -1,6 +1,8 @@
-const { User } = require("../db/userModel");
+const { User } = require("../../db/userModel");
 const bcrypt = require("bcrypt");
+const gravatar = require("gravatar");
 const jwt = require("jsonwebtoken");
+const { replaceAvatar } = require("../helpers/replaceAvatar");
 
 const registration = async (name, email, password) => {
   const candidate = await User.findOne({ email });
@@ -8,11 +10,12 @@ const registration = async (name, email, password) => {
   if (candidate) {
     throw new Error("Email in use");
   }
-
+  const avatarURL = gravatar.url(email);
   const user = new User({
     name,
     email,
     password: await bcrypt.hash(password, 10),
+    avatarURL,
   });
   await user.save();
   user.password = null;
@@ -46,29 +49,37 @@ const logout = async ({ _id }) => {
   return { message: "The user was logged out" };
 };
 
-const getCurrent = async (token) => {
-  const payload = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById({ _id: payload._id });
-
-  if (!user || !token) {
-    throw new Error("Unautorized");
-  }
-
-  const currentUser = { email: user.email, subscription: user.subscription };
+const getCurrent = async (token, req) => {
+  const currentUser = {
+    email: req.user.email,
+    subscription: req.user.subscription,
+  };
   return currentUser;
 };
 
-const changeUserSubscription = async (token, subscription) => {
-  const payload = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById({ _id: payload._id });
-
-  if (!user || !token) {
-    throw new Error("Unautorized");
-  }
-
-  await User.findOneAndUpdate({ _id: user._id }, { $set: { subscription } });
+const changeUserSubscription = async (token, req, subscription) => {
+  await User.findOneAndUpdate(
+    { _id: req.user._id },
+    { $set: { subscription } }
+  );
 
   return { message: `User subscription type was changed on ${subscription}` };
+};
+
+const changeAvatar = async (
+  token,
+  req,
+  originalname,
+  tempUpload,
+  avatarURL
+) => {
+  const newAvatarURL = await replaceAvatar(originalname, tempUpload);
+  await User.findOneAndUpdate(
+    { _id: req.user._id },
+    { $set: { avatarURL: newAvatarURL } }
+  );
+
+  return { message: "User avatar was changed." };
 };
 
 module.exports = {
@@ -77,4 +88,5 @@ module.exports = {
   logout,
   getCurrent,
   changeUserSubscription,
+  changeAvatar,
 };
